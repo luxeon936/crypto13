@@ -108,20 +108,34 @@ def friedman_test(ciphertext):
 
 def guess_vigenere_key(ciphertext, max_key_len=20):
     approx_len = int(round(friedman_test(ciphertext)))
-    candidates = range(max(1, approx_len-2), min(max_key_len, approx_len+3))
+    print(f"\n[+] Approximate key length from Friedman test: {approx_len}")
+    
+    candidates = range(max(1, approx_len - 2), min(max_key_len, approx_len + 3))
     best_key = ""
     best_score = float('-inf')
+    
     for length_candidate in candidates:
+        print(f"\n[+] Trying key length: {length_candidate}")
         columns = split_into_columns(ciphertext, length_candidate)
 
-        shifts = [guess_shift_by_frequency(col) for col in columns]
+        shifts = []
+        for idx, col in enumerate(columns):
+            shift = guess_shift_by_frequency(col)
+            print(f"  [-] Column {idx}: Guessed shift = {shift} ({chr(shift + ord('A'))})")
+            shifts.append(shift)
+
         candidate_key = "".join(chr(s + ord('A')) for s in shifts)
         decrypted_candidate = vigenere_decrypt(ciphertext, candidate_key)
         score_val = compute_english_score(decrypted_candidate)
+        print(f"  [=] Candidate key: {candidate_key}, English Score: {score_val:.2f}")
+        
         if score_val > best_score:
             best_score = score_val
             best_key = candidate_key
+
+    print(f"\n[✔] Best guessed key: {best_key} with score: {best_score:.2f}")
     return best_key
+
 
 def split_into_columns(ciphertext, key_length):
     filtered = [ch.upper() for ch in ciphertext if ch.isalpha()]
